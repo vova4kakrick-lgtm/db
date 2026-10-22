@@ -1,0 +1,21 @@
+{
+  "name": "ida-db-study-guide",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Статический справочник по курсу «Базы данных» (майнор ИАД): темы, задачи и вопросы с ответами.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check:content": "node scripts/check-content.mjs",
+    "check:links": "node scripts/check-links.mjs",
+    "check:sql": "node scripts/check-sql.mjs",
+    "check": "npm run check:content && npm run build && npm run check:links && npm run check:sql",
+    "serve": "node scripts/serve.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8"
+  }
+}
