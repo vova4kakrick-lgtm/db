@@ -343,3 +343,16 @@ mark { background: #ffe58a; color: #1d2329; border-radius: 2px; }
 @media print {
   .site-header, .header-search, .prev-next, .cta-row, .skip-link { display: none; }
 }
+
+/* Вкладка «Коды 2025» */
+.code-item h3 { margin: .7em 0 .4em; font-size: 1.15rem; }
+.code-er h3 { font-size: 1.1rem; }
+.code-meta { margin: 0 0 .6em; }
+.code-meta dt { font-weight: 650; margin-top: .4em; }
+.code-meta dd { margin: 0 0 0 0; }
+.code-meta dd p { margin: .15em 0; }
+.code-fix {
+  border-left: 4px solid var(--warn); background: var(--warn-soft); color: var(--text);
+  padding: 4px 14px; border-radius: 0 8px 8px 0; margin: .6em 0;
+}
+.code-fix p { display: inline; margin: 0; }

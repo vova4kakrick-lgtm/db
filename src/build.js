@@ -2,7 +2,8 @@
 import { mkdir, rm, writeFile, copyFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { loadCourse, ROOT, LEVELS } from './content.js';
-import { escapeHtml, toPlainText } from './markup.js';
+import { escapeHtml, toPlainText, renderCode } from './markup.js';
+import codes from '../content/codes-2025.js';
 import {
   url, layout, md, breadcrumbs, sourceLine, basisNote, theoryLinks,
   levelBadge, answerToggle, renderTaskSolution,
@@ -57,7 +58,7 @@ function pageHome(data) {
     <li><strong>Ищите</strong> по названиям тем, терминам, теории, задачам и вопросам через поле поиска вверху страницы.</li>
   </ol>
   <p>У каждого фрагмента указан источник — файл лекции и страница PDF. Если готового ответа в материалах нет, это отмечено явно. Сайт ничего не сохраняет: после перезагрузки страницы все ответы снова скрыты.</p>
-  <p>Формат контрольной (по вариантам прошлых лет): концептуальная модель, <code>CREATE TABLE</code> и 6 SQL-запросов — см. тему <a href="${url.topic('exam-practice')}">«Практикум контрольной»</a>.</p>
+  <p>Формат контрольной (по вариантам прошлых лет): концептуальная модель, <code>CREATE TABLE</code> и 6 SQL-запросов — см. тему <a href="${url.topic('exam-practice')}">«Практикум контрольной»</a>. Все коды трёх вариантов 2025 года с пояснениями собраны на вкладке <a href="${url.codes()}">«Коды 2025»</a>.</p>
 </section>
 <section aria-labelledby="topics-h">
   <h2 id="topics-h">Темы курса</h2>
@@ -351,6 +352,46 @@ ${breadcrumbs(root, [['Главная', url.home()], ['Источники', '']]
   return layout({ root, title: 'Источники', active: 'sources', body, data });
 }
 
+// Вкладка «Коды 2025»: все SQL трёх вариантов с кратким пояснением (content/codes-2025.js).
+function renderCodeItem(item, root) {
+  return `<article class="task code-item" id="code-${item.id}" aria-labelledby="code-${item.id}-h">
+  <h3 id="code-${item.id}-h">${escapeHtml(item.title)}</h3>
+  <dl class="code-meta">
+    <dt>Что делает</dt><dd>${md(item.about, root)}</dd>
+    <dt>Зачем и в чём идея</dt><dd>${md(item.why, root)}</dd>
+  </dl>
+  ${item.fix ? `<div class="code-fix"><strong>Исправлено по сравнению с разбором.</strong> ${md(item.fix, root)}</div>` : ''}
+  ${renderCode(item.code, 'sql')}
+</article>`;
+}
+
+function pageCodes(data) {
+  const root = '';
+  const c = data.codes;
+  const toc = c.variants
+    .map((v) => `<li class="toc-group"><a href="#${v.id}">${escapeHtml(v.title)}</a></li>${v.items
+      .map((it) => `<li><a href="#code-${it.id}">${escapeHtml(it.title)}</a></li>`)
+      .join('')}`)
+    .join('');
+  const sections = c.variants
+    .map((v) => `<section class="code-variant" id="${v.id}" aria-labelledby="${v.id}-h">
+<h2 id="${v.id}-h" class="group-title">${escapeHtml(v.title)}</h2>
+${v.postgis ? '<p class="callout">Геоданные хранятся в PostGIS (<code>GEOGRAPHY(POINT, 4326)</code>, расстояния в метрах). В материалах курса PostGIS не разбирается, но для задач «в радиусе N метров» это стандартный инструмент.</p>' : ''}
+<div class="code-er"><h3>${escapeHtml(v.items[0].title.split('.')[0])}.1. Концептуальная модель (кратко)</h3>${md(v.er, root)}</div>
+${v.items.map((it) => renderCodeItem(it, root)).join('\n')}
+</section>`)
+    .join('\n');
+  const body = `
+${breadcrumbs(root, [['Главная', url.home()], [c.short, '']])}
+<header class="topic-header">
+  <h1>${escapeHtml(c.title)}</h1>
+  <div class="lead">${md(c.intro, root)}</div>
+</header>
+<nav class="toc" aria-labelledby="toc-h"><h2 id="toc-h">Содержание</h2><ul class="toc-list">${toc}</ul></nav>
+${sections}`;
+  return layout({ root, title: c.title, active: 'codes', body, data });
+}
+
 function buildSearchIndex(data) {
   const entries = [];
   for (const t of data.topics) {
@@ -368,11 +409,17 @@ function buildSearchIndex(data) {
       entries.push({ k: 'question', title: toPlainText(q.q), text: '', url: url.questions(t.id, q.id), topic: t.short });
     }
   }
+  for (const v of data.codes.variants) {
+    for (const it of v.items) {
+      entries.push({ k: 'task', title: `${data.codes.short}: ${it.title}`, text: `${toPlainText(it.about)} ${toPlainText(it.why)}`, url: `${url.codes()}#code-${it.id}`, topic: v.title });
+    }
+  }
   return entries;
 }
 
 export async function build() {
   const data = await loadCourse();
+  data.codes = codes;
   await rm(DIST, { recursive: true, force: true });
   await mkdir(path.join(DIST, 'assets'), { recursive: true });
 
@@ -383,6 +430,7 @@ export async function build() {
   await emit(url.topics(), pageTopicsIndex(data));
   await emit(url.tasksIndex(), pageTasksIndex(data));
   await emit(url.questionsIndex(), pageQuestionsIndex(data));
+  await emit(url.codes(), pageCodes(data));
   await emit(url.search(), pageSearch(data));
   await emit(url.sources(), pageSources(data));
   for (const topic of data.topics) {

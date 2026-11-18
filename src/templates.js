@@ -11,6 +11,7 @@ export const url = {
   tasks: (id, taskId) => `tasks/${id}.html${taskId ? `#task-${taskId}` : ''}`,
   questionsIndex: () => 'questions/index.html',
   questions: (id, qId) => `questions/${id}.html${qId ? `#q-${qId}` : ''}`,
+  codes: () => 'codes.html',
   search: () => 'search.html',
   sources: () => 'sources.html',
 };
@@ -36,6 +37,7 @@ const NAV = [
   ['topics', 'Темы', url.topics],
   ['tasks', 'Задачи', url.tasksIndex],
   ['questions', 'Вопросы', url.questionsIndex],
+  ['codes', 'Коды 2025', url.codes],
   ['sources', 'Источники', url.sources],
 ];
 

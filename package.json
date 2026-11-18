@@ -12,7 +12,8 @@
     "check:content": "node scripts/check-content.mjs",
     "check:links": "node scripts/check-links.mjs",
     "check:sql": "node scripts/check-sql.mjs",
-    "check": "npm run check:content && npm run build && npm run check:links && npm run check:sql",
+    "check:codes": "node scripts/check-codes.mjs",
+    "check": "npm run check:content && npm run build && npm run check:links && npm run check:sql && npm run check:codes",
     "serve": "node scripts/serve.mjs"
   },
   "devDependencies": {
